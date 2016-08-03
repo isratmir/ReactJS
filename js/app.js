@@ -1,83 +1,74 @@
-var expenses = [
+'use strict'
+
+var my_expenses = [
         {
             "created_at": "2016-07-26 06:23:45", 
             "price": "15.00", 
-            "sid": "1", 
             "title": "Bread"
         }, 
         {
             "created_at": "2016-07-26 06:23:54", 
             "price": "27.00", 
-            "sid": "2", 
             "title": "Water"
         }, 
         {
             "created_at": "2016-07-26 06:44:35", 
             "price": "40.00", 
-            "sid": "3", 
             "title": "Sigarettes"
         }, 
         {
             "created_at": "2016-07-27 04:29:38", 
             "price": "110.00", 
-            "sid": "9", 
             "title": "Chicken"
         }, 
         {
             "created_at": "2016-07-27 04:29:50", 
             "price": "80.00", 
-            "sid": "10", 
             "title": "Salad"
         }, 
         {
             "created_at": "2016-07-27 04:30:12", 
             "price": "18.00", 
-            "sid": "11", 
             "title": "Bread"
         }, 
         {
             "created_at": "2016-07-31 04:29:18", 
             "price": "37.00", 
-            "sid": "12", 
             "title": "Sandwich"
         }, 
         {
             "created_at": "2016-07-31 04:35:49", 
             "price": "60.00", 
-            "sid": "13", 
             "title": "Chicken"
         }, 
         {
             "created_at": "2016-07-31 07:20:33", 
             "price": "60.00", 
-            "sid": "14", 
             "title": "Eggs"
         }, 
         {
             "created_at": "2016-07-31 07:20:46", 
             "price": "55.00", 
-            "sid": "15", 
             "title": "Kefir"
         }, 
         {
             "created_at": "2016-08-01 09:44:24", 
             "price": "122.00", 
-            "sid": "16", 
             "title": "Cheese"
         }, 
         {
             "created_at": "2016-08-01 10:15:39", 
             "price": "15.00", 
-            "sid": "17", 
             "title": "Zire"
         }, 
         {
             "created_at": "2016-08-01 10:15:48", 
             "price": "8.00", 
-            "sid": "18", 
             "title": "Sigarettes"
         }
     ];
+
+window.ee = new EventEmitter();
 
 var Expense = React.createClass({
 	render: function (argument) {
@@ -125,9 +116,22 @@ var Add = React.createClass({
 	},
 	onClickHandler: function (e) {
 		e.preventDefault();
-		var title = ReactDOM.findDOMNode(this.refs.title).value;
-		var price = ReactDOM.findDOMNode(this.refs.price).value;
-		console.log(title+' = '+price);
+		var title = ReactDOM.findDOMNode(this.refs.title);
+		var price = ReactDOM.findDOMNode(this.refs.price);
+		
+		var curdate = new Date();
+		var date = curdate.getFullYear()+'-'+curdate.getMonth()+'-'+curdate.getDate();
+		var item = [{
+			title: title.value,
+			price: price.value,
+			created_at: date
+		}];
+
+		window.ee.emit('News.add', item);
+
+		title.value = '';
+		price.value = '';
+		this.setState({textIsEmpty: true, priceIsEmpty: true});
 	},
 	onCheckRuleClick: function (argument) {
 		this.setState({btnDisabled: !this.state.btnDisabled});
@@ -167,12 +171,28 @@ var Add = React.createClass({
 });
 
 var App = React.createClass({
+	getInitialState: function () {
+		return {
+			expenses: my_expenses
+		}
+	},
+	componentDidMount: function (argument) {
+		var self = this;
+		window.ee.addListener('News.add', function (item) {
+			var nextExp = item.concat(self.state.expenses);
+			self.setState({expenses: nextExp});
+		});
+	},
+	componentWillUnmount: function (argument) {
+		window.ee.removeListener('News.add');
+	},
 	render: function (argument) {
+		console.log('render');
 		return (
 			<div>
 				<h2 className="page-header">Expenses</h2>
 				<Add />
-				<Expenses data={expenses}/>
+				<Expenses data={this.state.expenses}/>
 			</div>
 		)
 	}
